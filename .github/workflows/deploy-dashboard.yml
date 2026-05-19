@@ -1,0 +1,96 @@
+name: Build and Deploy Dashboard
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build container image via ACR
+        run: |
+          az acr build \
+            --registry reedintelacr \
+            --image reedintel-dashboard:${{ github.sha }} \
+            --image reedintel-dashboard:latest \
+            ./dashboard
+
+      - name: Deploy Container App (create or update)
+        run: |
+          ACR_PASS=$(az acr credential show \
+            --name reedintelacr \
+            --resource-group reedintel-prod-rg \
+            --query "passwords[0].value" -o tsv)
+
+          APP_EXISTS=$(az containerapp show \
+            --name reedintel-dashboard \
+            --resource-group reedintel-prod-rg \
+            --query name -o tsv 2>/dev/null || echo "")
+
+          if [ -z "$APP_EXISTS" ]; then
+            echo "Creating Container App for the first time..."
+            DB_PASS="${{ secrets.DATABASE_PASSWORD }}"
+            DASH_USER="${{ secrets.DASHBOARD_USER }}"
+            DASH_PASS="${{ secrets.DASHBOARD_PASS }}"
+
+            az containerapp create \
+              --name reedintel-dashboard \
+              --resource-group reedintel-prod-rg \
+              --environment reedintel-prod-cae \
+              --image "reedintelacr.azurecr.io/reedintel-dashboard:${{ github.sha }}" \
+              --registry-server reedintelacr.azurecr.io \
+              --registry-username reedintelacr \
+              --registry-password "$ACR_PASS" \
+              --cpu 0.5 --memory 1.0Gi \
+              --min-replicas 1 --max-replicas 1 \
+              --ingress external --target-port 8000 \
+              --secrets \
+                "db-password=${DB_PASS}" \
+                "dash-user=${DASH_USER}" \
+                "dash-pass=${DASH_PASS}" \
+              --env-vars \
+                DATABASE_HOST=reedintel-pg-prod.postgres.database.azure.com \
+                DATABASE_NAME=reedintel \
+                DATABASE_USER=reedadmin \
+                DATABASE_SSLMODE=require \
+                DATABASE_PASSWORD=secretref:db-password \
+                DASHBOARD_USER=secretref:dash-user \
+                DASHBOARD_PASS=secretref:dash-pass
+          else
+            echo "Updating existing Container App..."
+            az containerapp registry set \
+              --name reedintel-dashboard \
+              --resource-group reedintel-prod-rg \
+              --server reedintelacr.azurecr.io \
+              --username reedintelacr \
+              --password "$ACR_PASS"
+
+            az containerapp update \
+              --name reedintel-dashboard \
+              --resource-group reedintel-prod-rg \
+              --image "reedintelacr.azurecr.io/reedintel-dashboard:${{ github.sha }}"
+          fi
+
+      - name: Print dashboard URL
+        run: |
+          URL=$(az containerapp show \
+            --name reedintel-dashboard \
+            --resource-group reedintel-prod-rg \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          echo "=================================="
+          echo "  Dashboard live at:"
+          echo "  https://$URL"
+          echo "=================================="
