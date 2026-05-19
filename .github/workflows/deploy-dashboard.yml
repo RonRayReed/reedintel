@@ -42,9 +42,6 @@ jobs:
 
           if [ -z "$APP_EXISTS" ]; then
             echo "Creating Container App for the first time..."
-            DB_PASS="${{ secrets.DATABASE_PASSWORD }}"
-            DASH_USER="${{ secrets.DASHBOARD_USER }}"
-            DASH_PASS="${{ secrets.DASHBOARD_PASS }}"
 
             az containerapp create \
               --name reedintel-dashboard \
@@ -57,18 +54,14 @@ jobs:
               --cpu 0.5 --memory 1.0Gi \
               --min-replicas 1 --max-replicas 1 \
               --ingress external --target-port 8000 \
-              --secrets \
-                "db-password=${DB_PASS}" \
-                "dash-user=${DASH_USER}" \
-                "dash-pass=${DASH_PASS}" \
               --env-vars \
                 DATABASE_HOST=reedintel-pg-prod.postgres.database.azure.com \
                 DATABASE_NAME=reedintel \
                 DATABASE_USER=reedadmin \
                 DATABASE_SSLMODE=require \
-                DATABASE_PASSWORD=secretref:db-password \
-                DASHBOARD_USER=secretref:dash-user \
-                DASHBOARD_PASS=secretref:dash-pass
+                "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" \
+                "DASHBOARD_USER=${{ secrets.DASHBOARD_USER }}" \
+                "DASHBOARD_PASS=${{ secrets.DASHBOARD_PASS }}"
           else
             echo "Updating existing Container App..."
             az containerapp registry set \
