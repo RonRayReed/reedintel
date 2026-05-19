@@ -1,0 +1,61 @@
+{
+  "name": "ProZorro Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 30 }]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "command": "python /app/src/main.py"
+      },
+      "name": "Run Worker",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.stdout }}",
+              "operation": "contains",
+              "value2": "error"
+            }
+          ]
+        }
+      },
+      "name": "Check for Errors",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "subject": "Reed Intel Worker Error",
+        "message": "Worker run failed:\n{{ $json.stdout }}\n{{ $json.stderr }}"
+      },
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 200],
+      "notes": "Configure SMTP credentials in n8n credentials"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "Run Worker", "type": "main", "index": 0 }]] },
+    "Run Worker":       { "main": [[{ "node": "Check for Errors", "type": "main", "index": 0 }]] },
+    "Check for Errors": { "main": [[{ "node": "Alert on Error", "type": "main", "index": 0 }], []] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["reedintel", "prozorro"]
+}

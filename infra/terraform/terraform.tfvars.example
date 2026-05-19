@@ -1,0 +1,10 @@
+# Copy this file to terraform.tfvars and fill in real values.
+# Never commit terraform.tfvars to git.
+
+location                = "northeurope"
+resource_group_name     = "reedintel-prod-rg"
+environment             = "prod"
+postgres_admin_user     = "reedadmin"
+postgres_admin_password = "REPLACE_WITH_STRONG_PASSWORD"
+# allowed_admin_ip      = ""   # optional — leave empty, use Azure Cloud Shell for psql access
+openai_api_key          = ""   # add your OpenAI key when ready to enable AI drafting

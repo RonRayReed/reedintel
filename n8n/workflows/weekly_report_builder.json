@@ -1,0 +1,66 @@
+{
+  "name": "Weekly Report Builder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "weeks", "triggerAtDay": [1], "triggerAtHour": 7 }]
+        }
+      },
+      "name": "Monday 7am Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT city, sector, COUNT(*) as event_count, SUM(value_amount) as total_value FROM procurement_events WHERE publication_date >= NOW() - INTERVAL '7 days' GROUP BY city, sector ORDER BY event_count DESC;"
+      },
+      "name": "Fetch Weekly Procurement Stats",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [460, 200],
+      "notes": "Configure Postgres credentials in n8n credentials"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT event_type, title, city, country, sector, source_url, why_it_matters, confidence_score FROM editorial_queue WHERE status IN ('new','needs_research') AND created_at >= NOW() - INTERVAL '7 days' ORDER BY confidence_score DESC LIMIT 20;"
+      },
+      "name": "Fetch Editorial Queue",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [460, 400],
+      "notes": "Configure Postgres credentials in n8n credentials"
+    },
+    {
+      "parameters": {
+        "jsCode": "const stats = $('Fetch Weekly Procurement Stats').all();\nconst queue = $('Fetch Editorial Queue').all();\nconst weekEnd = new Date().toISOString().split('T')[0];\nconst weekStart = new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0];\n\nlet md = `# Reed Intel Weekly Report\\n**Week: ${weekStart} → ${weekEnd}**\\n\\n`;\nmd += `## Procurement Activity\\n| City | Sector | Events | Total Value |\\n|------|--------|--------|-------------|\\n`;\nfor (const row of stats) {\n  md += `| ${row.json.city || '-'} | ${row.json.sector || '-'} | ${row.json.event_count} | ${row.json.total_value || 0} |\\n`;\n}\nmd += `\\n## Editorial Priority Queue\\n`;\nfor (const item of queue) {\n  md += `### ${item.json.title}\\n- **City:** ${item.json.city}  **Sector:** ${item.json.sector}\\n- **Why it matters:** ${item.json.why_it_matters}\\n- **Source:** ${item.json.source_url}\\n\\n`;\n}\n\nreturn [{ json: { report_markdown: md, week_start: weekStart, week_end: weekEnd } }];"
+      },
+      "name": "Build Report Markdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO weekly_reports (week_start, week_end, title, report_markdown) VALUES ('{{ $json.week_start }}', '{{ $json.week_end }}', 'Weekly Regional Intelligence Report', '{{ $json.report_markdown }}');"
+      },
+      "name": "Save Report to DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Monday 7am Trigger":          { "main": [[{ "node": "Fetch Weekly Procurement Stats", "type": "main", "index": 0 }, { "node": "Fetch Editorial Queue", "type": "main", "index": 0 }]] },
+    "Fetch Weekly Procurement Stats": { "main": [[{ "node": "Build Report Markdown", "type": "main", "index": 0 }]] },
+    "Fetch Editorial Queue":       { "main": [[{ "node": "Build Report Markdown", "type": "main", "index": 0 }]] },
+    "Build Report Markdown":       { "main": [[{ "node": "Save Report to DB", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["reedintel", "weekly-report"]
+}

@@ -1,0 +1,13 @@
+requests==2.32.3
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.32
+pydantic==2.8.2
+python-dotenv==1.0.1
+rapidfuzz==3.9.6
+beautifulsoup4==4.12.3
+feedparser==6.0.11
+openai==1.40.0
+azure-identity==1.17.1
+azure-keyvault-secrets==4.8.0
+azure-storage-blob==12.22.0
+python-dateutil==2.9.0.post0

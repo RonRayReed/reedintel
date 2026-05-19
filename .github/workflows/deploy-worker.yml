@@ -1,0 +1,47 @@
+name: Build and Deploy Worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build container image via ACR
+        run: |
+          az acr build \
+            --registry reedintelacr \
+            --image reedintel-worker:${{ github.sha }} \
+            --image reedintel-worker:latest \
+            ./worker
+
+      - name: Deploy image to Container App
+        run: |
+          az containerapp update \
+            --name reedintel-worker \
+            --resource-group reedintel-prod-rg \
+            --image reedintelacr.azurecr.io/reedintel-worker:${{ github.sha }}
+
+      - name: Set database password secret on Container App
+        run: |
+          az containerapp secret set \
+            --name reedintel-worker \
+            --resource-group reedintel-prod-rg \
+            --secrets "db-password=${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
+          az containerapp update \
+            --name reedintel-worker \
+            --resource-group reedintel-prod-rg \
+            --set-env-vars "DATABASE_PASSWORD=secretref:db-password"

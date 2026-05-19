@@ -1,0 +1,22 @@
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.backup
+infra/terraform/terraform.tfvars
+infra/terraform/crash.log
+
+# Python
+worker/.venv/
+worker/__pycache__/
+worker/src/__pycache__/
+worker/src/connectors/__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Secrets — never commit these
+*.pem
+*.key
+credentials.json
+cloud-shell-setup.sh
