@@ -30,9 +30,11 @@ jobs:
 
       - name: Deploy image to Container App
         run: |
+          ACR_PASS=$(az acr credential show --name reedintelacr --query "passwords[0].value" -o tsv)
           az containerapp update \
             --name reedintel-worker \
             --resource-group reedintel-prod-rg \
             --image reedintelacr.azurecr.io/reedintel-worker:${{ github.sha }} \
             --registry-server reedintelacr.azurecr.io \
-            --registry-identity system
+            --registry-username reedintelacr \
+            --registry-password "$ACR_PASS"
