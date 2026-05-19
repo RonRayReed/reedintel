@@ -1,14 +1,12 @@
 import os
-import secrets
 import logging
 from decimal import Decimal
 from datetime import datetime
 from contextlib import contextmanager
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import psycopg2
 import psycopg2.extras
 
@@ -16,22 +14,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(docs_url=None, redoc_url=None)
-security = HTTPBasic()
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-
-
-def check_auth(credentials: HTTPBasicCredentials = Depends(security)):
-    expected_user = os.getenv("DASHBOARD_USER", "reedintel")
-    expected_pass = os.getenv("DASHBOARD_PASS", "intel2024")
-    ok_user = secrets.compare_digest(credentials.username.encode(), expected_user.encode())
-    ok_pass = secrets.compare_digest(credentials.password.encode(), expected_pass.encode())
-    if not (ok_user and ok_pass):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": 'Basic realm="Reed Intel"'},
-        )
-    return credentials.username
 
 
 @contextmanager
@@ -70,7 +54,7 @@ async def health():
 
 
 @app.get("/api/dashboard")
-async def get_dashboard(_: str = Depends(check_auth)):
+async def get_dashboard():
     data = {
         "sources": [],
         "editorial": [],
@@ -154,9 +138,9 @@ if os.path.isdir(STATIC_DIR):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.get("/")
-    async def serve_root(_: str = Depends(check_auth)):
+    async def serve_root():
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
     @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str, _: str = Depends(check_auth)):
+    async def serve_spa(full_path: str):
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
