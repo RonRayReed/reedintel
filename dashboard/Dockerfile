@@ -2,7 +2,7 @@
 FROM node:20-slim AS ui-build
 WORKDIR /ui
 COPY ui/package*.json ./
-RUN npm ci
+RUN npm install
 COPY ui/ .
 RUN npm run build
 
