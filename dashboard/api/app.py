@@ -3,6 +3,9 @@ import json
 import hashlib
 import logging
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()  # loads .env if present (local dev only — no-op in production)
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
