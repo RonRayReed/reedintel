@@ -33,15 +33,6 @@ jobs:
           az containerapp update \
             --name reedintel-worker \
             --resource-group reedintel-prod-rg \
-            --image reedintelacr.azurecr.io/reedintel-worker:${{ github.sha }}
-
-      - name: Set database password secret on Container App
-        run: |
-          az containerapp secret set \
-            --name reedintel-worker \
-            --resource-group reedintel-prod-rg \
-            --secrets "db-password=${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
-          az containerapp update \
-            --name reedintel-worker \
-            --resource-group reedintel-prod-rg \
-            --set-env-vars "DATABASE_PASSWORD=secretref:db-password"
+            --image reedintelacr.azurecr.io/reedintel-worker:${{ github.sha }} \
+            --registry-server reedintelacr.azurecr.io \
+            --registry-identity system
