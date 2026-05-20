@@ -13,7 +13,7 @@
 | OpenDataBot | Company enrichment | Ukraine | Ukraine | API Key | On-demand | Skeleton |
 
 ## Adding a New Source
-1. Add a row to the `sources` table via `seed_reference_data.sql`
+1. Add a row to the `sources` table via an Alembic migration or directly in the database
 2. Create a connector in `worker/src/connectors/`
 3. Import and call it in `worker/src/main.py`
 4. Add an n8n schedule node in `prozorro_monitor.json` or create a new workflow

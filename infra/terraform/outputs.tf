@@ -10,9 +10,6 @@ output "key_vault_name" {
   value = azurerm_key_vault.kv.name
 }
 
-output "n8n_url" {
-  value = "https://${azurerm_container_app.n8n.latest_revision_fqdn}"
-}
 
 output "acr_login_server" {
   value = azurerm_container_registry.acr.login_server

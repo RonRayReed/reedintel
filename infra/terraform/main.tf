@@ -116,57 +116,26 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-resource "azurerm_container_app" "n8n" {
-  name                         = "reedintel-n8n"
-  container_app_environment_id = azurerm_container_app_environment.cae.id
-  resource_group_name          = azurerm_resource_group.rg.name
-  revision_mode                = "Single"
-
-  ingress {
-    external_enabled = true
-    target_port      = 5678
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-
-  template {
-    container {
-      name   = "n8n"
-      image  = "docker.n8n.io/n8nio/n8n:latest"
-      cpu    = 0.5
-      memory = "1Gi"
-
-      env {
-        name  = "N8N_BASIC_AUTH_ACTIVE"
-        value = "true"
-      }
-      env {
-        name  = "N8N_BASIC_AUTH_USER"
-        value = "admin"
-      }
-      env {
-        name  = "N8N_BASIC_AUTH_PASSWORD"
-        value = "CHANGE_ME_IN_PRODUCTION"
-      }
-      env {
-        name  = "N8N_HOST"
-        value = "0.0.0.0"
-      }
-      env {
-        name  = "N8N_PORT"
-        value = "5678"
-      }
-    }
-  }
-}
 
 resource "azurerm_container_app" "worker" {
   name                         = "reedintel-worker"
   container_app_environment_id = azurerm_container_app_environment.cae.id
   resource_group_name          = azurerm_resource_group.rg.name
   revision_mode                = "Single"
+
+  secret {
+    name  = "db-password"
+    value = var.postgres_admin_password
+  }
+
+  ingress {
+    external_enabled = false
+    target_port      = 8000
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
+  }
 
   template {
     min_replicas = 0
@@ -191,8 +160,12 @@ resource "azurerm_container_app" "worker" {
         value = var.postgres_admin_user
       }
       env {
-        name  = "RUN_MODE"
-        value = "once"
+        name        = "DATABASE_PASSWORD"
+        secret_name = "db-password"
+      }
+      env {
+        name  = "DATABASE_SSLMODE"
+        value = "require"
       }
     }
   }

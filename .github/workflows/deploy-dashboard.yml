@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "dashboard/**"
+      - "frontend/**"
 
 jobs:
   build-and-deploy:
@@ -26,7 +26,7 @@ jobs:
             --registry reedintelacr \
             --image reedintel-dashboard:${{ github.sha }} \
             --image reedintel-dashboard:latest \
-            ./dashboard
+            ./frontend
 
       - name: Deploy Container App (create or update)
         run: |
@@ -53,13 +53,9 @@ jobs:
               --registry-password "$ACR_PASS" \
               --cpu 0.5 --memory 1.0Gi \
               --min-replicas 1 --max-replicas 1 \
-              --ingress external --target-port 8000 \
+              --ingress external --target-port 80 \
               --env-vars \
-                DATABASE_HOST=reedintel-pg-prod.postgres.database.azure.com \
-                DATABASE_NAME=reedintel \
-                DATABASE_USER=reedadmin \
-                DATABASE_SSLMODE=require \
-                "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" \
+                "BACKEND_URL=http://reedintel-worker" \
                 "DASHBOARD_USER=${{ secrets.DASHBOARD_USER }}" \
                 "DASHBOARD_PASS=${{ secrets.DASHBOARD_PASS }}"
           else

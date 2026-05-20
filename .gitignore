@@ -7,10 +7,9 @@ infra/terraform/terraform.tfvars
 infra/terraform/crash.log
 
 # Python
-worker/.venv/
-worker/__pycache__/
-worker/src/__pycache__/
-worker/src/connectors/__pycache__/
+backend/.venv/
+backend/__pycache__/
+frontend/node_modules/
 *.pyc
 *.pyo
 .env
@@ -20,3 +19,9 @@ worker/src/connectors/__pycache__/
 *.key
 credentials.json
 cloud-shell-setup.sh
+
+# Non-code assets
+*.pdf
+*.png
+*.jpg
+client-briefing.html

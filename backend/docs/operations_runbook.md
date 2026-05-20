@@ -29,11 +29,12 @@
 ## Applying the Database Schema (First Time)
 Use **Azure Cloud Shell** — no IP or local tools needed:
 1. Open portal.azure.com → click the Cloud Shell icon (top bar)
-2. Run:
+2. SSH into the worker container or run from a machine with the repo and env vars set
+3. Run:
 ```bash
-psql "host=reedintel-pg-prod.postgres.database.azure.com port=5432 dbname=reedintel user=reedadmin sslmode=require"
+cd reedintel-infrastructure/backend
+alembic upgrade head
 ```
-3. Paste the contents of `database/schema.sql` then `database/seed_reference_data.sql`
 
 ## Key Azure Resources
 | Resource | Name |

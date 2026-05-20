@@ -8,11 +8,10 @@ from dotenv import load_dotenv
 load_dotenv()  # loads .env if present (local dev only — no-op in production)
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
-from contextlib import contextmanager
-
+from contextlib import asynccontextmanager, contextmanager
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 import psycopg2
 import psycopg2.extras
@@ -20,9 +19,25 @@ import psycopg2.extras
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(docs_url=None, redoc_url=None)
 scheduler = BackgroundScheduler()
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.add_job(run_prozorro, "interval", minutes=30, next_run_time=datetime.utcnow())
+    scheduler.start()
+    logger.info("Scheduler started — ProZorro runs every 30 minutes")
+    yield
+    scheduler.shutdown(wait=False)
+
+app = FastAPI(docs_url=None, redoc_url=None, lifespan=lifespan)
+_origins = os.getenv("ALLOWED_ORIGINS", "")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins.split(",") if _origins else ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 
 # ── Database ──────────────────────────────────────────────────────────────────
@@ -162,20 +177,6 @@ def run_prozorro():
     return created
 
 
-# ── Scheduler ────────────────────────────────────────────────────────────────
-
-@app.on_event("startup")
-async def startup():
-    scheduler.add_job(run_prozorro, "interval", minutes=30, next_run_time=datetime.utcnow())
-    scheduler.start()
-    logger.info("Scheduler started — ProZorro runs every 30 minutes")
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    scheduler.shutdown(wait=False)
-
-
 # ── API routes ────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -257,19 +258,3 @@ async def get_dashboard():
         data["error"] = str(e)
 
     return JSONResponse(content=data)
-
-
-# ── Serve React SPA ───────────────────────────────────────────────────────────
-
-if os.path.isdir(STATIC_DIR):
-    assets_dir = os.path.join(STATIC_DIR, "assets")
-    if os.path.isdir(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
-    @app.get("/")
-    async def serve_root():
-        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
-
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str):
-        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
