@@ -61,11 +61,6 @@ jobs:
             --sku standard \
             --retention-days 7 2>/dev/null || echo "Key Vault already exists, skipping."
 
-          az keyvault secret set \
-            --vault-name reedintel-prod-kv \
-            --name postgres-admin-password \
-            --value "${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
-
       - name: PostgreSQL Server & Database
         run: |
           az postgres flexible-server create \
