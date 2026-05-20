@@ -6,48 +6,179 @@ on:
     branches: [main]
     paths:
       - "infra/terraform/**"
+      - ".github/workflows/deploy-infra.yml"
 
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infra/terraform
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Resource Group
+        run: |
+          az group create \
+            --name reedintel-prod-rg \
+            --location northeurope
 
-      - name: Terraform Init
-        run: terraform init
-        env:
-          ARM_ACCESS_KEY: ${{ secrets.TF_STATE_ACCESS_KEY }}
+      - name: Log Analytics Workspace
+        run: |
+          az monitor log-analytics workspace create \
+            --workspace-name reedintel-prod-law \
+            --resource-group reedintel-prod-rg \
+            --location northeurope \
+            --sku PerGB2018 \
+            --retention-time 30
 
-      - name: Terraform Format Check
-        run: terraform fmt -check
+      - name: Storage Account & Containers
+        run: |
+          az storage account create \
+            --name reedintelprodsa \
+            --resource-group reedintel-prod-rg \
+            --location northeurope \
+            --sku Standard_LRS \
+            --min-tls-version TLS1_2
 
-      - name: Terraform Validate
-        run: terraform validate
+          az storage container create \
+            --name raw-source-records \
+            --account-name reedintelprodsa \
+            --auth-mode login
 
-      - name: Terraform Plan
-        run: terraform plan
-        env:
-          ARM_ACCESS_KEY: ${{ secrets.TF_STATE_ACCESS_KEY }}
-          TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
-          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          az storage container create \
+            --name exports \
+            --account-name reedintelprodsa \
+            --auth-mode login
 
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve
-        env:
-          ARM_ACCESS_KEY: ${{ secrets.TF_STATE_ACCESS_KEY }}
-          TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
-          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+      - name: Key Vault & Secrets
+        run: |
+          az keyvault create \
+            --name reedintel-prod-kv \
+            --resource-group reedintel-prod-rg \
+            --location northeurope \
+            --sku standard \
+            --retention-days 7
+
+          az keyvault secret set \
+            --vault-name reedintel-prod-kv \
+            --name postgres-admin-password \
+            --value "${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
+
+      - name: PostgreSQL Server & Database
+        run: |
+          az postgres flexible-server create \
+            --name reedintel-pg-prod \
+            --resource-group reedintel-prod-rg \
+            --location northeurope \
+            --admin-user reedadmin \
+            --admin-password "${{ secrets.POSTGRES_ADMIN_PASSWORD }}" \
+            --sku-name B_Standard_B2s \
+            --tier Burstable \
+            --version 15 \
+            --storage-size 131072 \
+            --backup-retention 7 \
+            --zone 1 \
+            --public-access 0.0.0.0 \
+            --yes 2>/dev/null || echo "PostgreSQL server already exists, skipping."
+
+          az postgres flexible-server db create \
+            --server-name reedintel-pg-prod \
+            --resource-group reedintel-prod-rg \
+            --database-name reedintel 2>/dev/null || echo "Database already exists, skipping."
+
+          az postgres flexible-server firewall-rule create \
+            --name allow-azure-services \
+            --resource-group reedintel-prod-rg \
+            --server-name reedintel-pg-prod \
+            --start-ip-address 0.0.0.0 \
+            --end-ip-address 0.0.0.0 2>/dev/null || echo "Firewall rule already exists, skipping."
+
+      - name: Container Registry
+        run: |
+          az acr create \
+            --name reedintelacr \
+            --resource-group reedintel-prod-rg \
+            --location northeurope \
+            --sku Basic \
+            --admin-enabled true 2>/dev/null || echo "ACR already exists, skipping."
+
+      - name: Container App Environment
+        run: |
+          LAW_CUSTOMER_ID=$(az monitor log-analytics workspace show \
+            --workspace-name reedintel-prod-law \
+            --resource-group reedintel-prod-rg \
+            --query customerId -o tsv)
+
+          LAW_KEY=$(az monitor log-analytics workspace get-shared-keys \
+            --workspace-name reedintel-prod-law \
+            --resource-group reedintel-prod-rg \
+            --query primarySharedKey -o tsv)
+
+          az containerapp env create \
+            --name reedintel-prod-cae \
+            --resource-group reedintel-prod-rg \
+            --location northeurope \
+            --logs-workspace-id "$LAW_CUSTOMER_ID" \
+            --logs-workspace-key "$LAW_KEY" 2>/dev/null || echo "Container App Environment already exists, skipping."
+
+      - name: Worker Container App
+        run: |
+          PG_FQDN=$(az postgres flexible-server show \
+            --name reedintel-pg-prod \
+            --resource-group reedintel-prod-rg \
+            --query fullyQualifiedDomainName -o tsv)
+
+          ACR_PASS=$(az acr credential show \
+            --name reedintelacr \
+            --resource-group reedintel-prod-rg \
+            --query "passwords[0].value" -o tsv)
+
+          APP_EXISTS=$(az containerapp show \
+            --name reedintel-worker \
+            --resource-group reedintel-prod-rg \
+            --query name -o tsv 2>/dev/null || echo "")
+
+          if [ -z "$APP_EXISTS" ]; then
+            az containerapp create \
+              --name reedintel-worker \
+              --resource-group reedintel-prod-rg \
+              --environment reedintel-prod-cae \
+              --image mcr.microsoft.com/azuredocs/containerapps-helloworld:latest \
+              --registry-server reedintelacr.azurecr.io \
+              --registry-username reedintelacr \
+              --registry-password "$ACR_PASS" \
+              --cpu 0.5 --memory 1.0Gi \
+              --min-replicas 0 --max-replicas 2 \
+              --ingress internal --target-port 8000 \
+              --env-vars \
+                "DATABASE_HOST=$PG_FQDN" \
+                DATABASE_NAME=reedintel \
+                DATABASE_USER=reedadmin \
+                DATABASE_SSLMODE=require \
+                "DATABASE_PASSWORD=${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
+          else
+            echo "Worker Container App already exists, skipping."
+          fi
+
+      - name: Print Outputs
+        run: |
+          PG_FQDN=$(az postgres flexible-server show \
+            --name reedintel-pg-prod \
+            --resource-group reedintel-prod-rg \
+            --query fullyQualifiedDomainName -o tsv)
+
+          ACR_SERVER=$(az acr show \
+            --name reedintelacr \
+            --resource-group reedintel-prod-rg \
+            --query loginServer -o tsv)
+
+          echo "=================================="
+          echo "  INFRASTRUCTURE READY"
+          echo "=================================="
+          echo "  PostgreSQL : $PG_FQDN"
+          echo "  ACR        : $ACR_SERVER"
+          echo "  Key Vault  : reedintel-prod-kv"
+          echo "  Resource Group: reedintel-prod-rg"
+          echo "=================================="
