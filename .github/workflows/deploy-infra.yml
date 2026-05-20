@@ -59,7 +59,7 @@ jobs:
             --resource-group reedintel-prod-rg \
             --location northeurope \
             --sku standard \
-            --retention-days 7
+            --retention-days 7 2>/dev/null || echo "Key Vault already exists, skipping."
 
           az keyvault secret set \
             --vault-name reedintel-prod-kv \
