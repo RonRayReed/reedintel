@@ -1,3 +1,8 @@
+import {
+  to = azurerm_resource_group.rg
+  id = "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg"
+}
+
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "rg" {
