@@ -9,7 +9,7 @@ fi
 ACR_PASS=$(az acr credential show --name reedintelacr --resource-group reedintel-prod-rg --query "passwords[0].value" -o tsv)
 PG_FQDN=$(az postgres flexible-server show --name reedintel-pg-prod --resource-group reedintel-prod-rg --query fullyQualifiedDomainName -o tsv)
 ENV_DOMAIN=$(az containerapp env show --name reedintel-prod-cae --resource-group reedintel-prod-rg --query "properties.defaultDomain" -o tsv)
-BACKEND_URL="http://reedintel-backend.internal.$ENV_DOMAIN"
+BACKEND_URL="https://reedintel-backend.internal.$ENV_DOMAIN"
 
 echo "Credentials fetched."
 echo "  PG host      : $PG_FQDN"

@@ -40,7 +40,7 @@ jobs:
             --resource-group reedintel-prod-rg \
             --query "properties.defaultDomain" -o tsv)
 
-          BACKEND_URL="http://reedintel-backend.internal.$ENV_DOMAIN"
+          BACKEND_URL="https://reedintel-backend.internal.$ENV_DOMAIN"
 
           APP_EXISTS=$(az containerapp show \
             --name reedintel-dashboard \
