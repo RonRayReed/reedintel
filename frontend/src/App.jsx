@@ -85,8 +85,8 @@ export default function App() {
         <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} newCount={data.stats.new_items} />
 
         {activeTab === 'signals'   && <SignalsTab   signals={data.editorial} />}
-        {activeTab === 'companies' && <CompaniesTab companies={data.companies} />}
-        {activeTab === 'report'    && <ReportTab    report={data.report} />}
+        {activeTab === 'companies' && <CompaniesTab companies={data.companies} signals={data.editorial} />}
+        {activeTab === 'report'    && <ReportTab    report={data.report} stats={data.stats} signals={data.editorial} />}
         {activeTab === 'sources'   && <SourcesTab   sources={data.sources} />}
       </div>
 

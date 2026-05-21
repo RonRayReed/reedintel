@@ -184,6 +184,27 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class StatusUpdate(BaseModel):
+    status: str
+
+@app.patch("/api/signals/{queue_id}/status")
+async def update_signal_status(queue_id: str, body: StatusUpdate):
+    if body.status not in ("new", "in_review", "published", "dismissed"):
+        raise HTTPException(status_code=400, detail="Invalid status")
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE editorial_queue SET status=%s WHERE queue_id=%s::uuid",
+                (body.status, queue_id)
+            )
+            conn.commit()
+            cur.close()
+    except Exception as e:
+        logger.error("Status update error: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"ok": True}
+
 @app.post("/api/auth")
 async def auth(req: LoginRequest):
     if req.username == os.getenv("DASH_USER", "admin") and \
