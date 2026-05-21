@@ -66,18 +66,43 @@ jobs:
                 DATABASE_SSLMODE=require \
                 "DATABASE_PASSWORD=${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
           else
-            echo "Updating existing backend Container App..."
-            az containerapp registry set \
-              --name reedintel-backend \
-              --resource-group reedintel-prod-rg \
-              --server reedintelacr.azurecr.io \
-              --username reedintelacr \
-              --password "$ACR_PASS"
+            echo "Waiting for container app to reach a stable state..."
+            for i in $(seq 1 15); do
+              STATE=$(az containerapp show \
+                --name reedintel-backend \
+                --resource-group reedintel-prod-rg \
+                --query "properties.provisioningState" -o tsv 2>/dev/null || echo "Unknown")
+              echo "  provisioningState: $STATE"
+              if [ "$STATE" = "Succeeded" ] || [ "$STATE" = "Failed" ]; then
+                break
+              fi
+              echo "  Not ready yet — waiting 20s (attempt $i/15)..."
+              sleep 20
+            done
 
-            az containerapp update \
-              --name reedintel-backend \
-              --resource-group reedintel-prod-rg \
-              --image "reedintelacr.azurecr.io/reedintel-backend:${{ github.sha }}"
+            echo "Updating existing backend Container App..."
+
+            for i in 1 2 3 4 5; do
+              az containerapp registry set \
+                --name reedintel-backend \
+                --resource-group reedintel-prod-rg \
+                --server reedintelacr.azurecr.io \
+                --username reedintelacr \
+                --password "$ACR_PASS" && break || {
+                echo "registry set attempt $i failed, retrying in 30s..."
+                sleep 30
+              }
+            done
+
+            for i in 1 2 3 4 5; do
+              az containerapp update \
+                --name reedintel-backend \
+                --resource-group reedintel-prod-rg \
+                --image "reedintelacr.azurecr.io/reedintel-backend:${{ github.sha }}" && break || {
+                echo "update attempt $i failed, retrying in 30s..."
+                sleep 30
+              }
+            done
           fi
 
       - name: Print backend internal URL
@@ -86,4 +111,4 @@ jobs:
             --name reedintel-prod-cae \
             --resource-group reedintel-prod-rg \
             --query "properties.defaultDomain" -o tsv)
-          echo "Backend internal URL: http://reedintel-backend.internal.$ENV_DOMAIN"
+          echo "Backend internal URL: https://reedintel-backend.internal.$ENV_DOMAIN"
