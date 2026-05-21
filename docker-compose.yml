@@ -9,6 +9,8 @@ services:
       DATABASE_USER: ${DATABASE_USER:-reedadmin}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_SSLMODE: ${DATABASE_SSLMODE:-require}
+      DASH_USER: ${DASH_USER:-admin}
+      DASH_PASSWORD: ${DASH_PASSWORD:-changeme}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
       interval: 30s
@@ -31,9 +33,6 @@ services:
     build: ./frontend
     ports:
       - "80:80"
-    environment:
-      DASH_USER: ${DASH_USER:-admin}
-      DASH_PASSWORD: ${DASH_PASSWORD:-changeme}
     depends_on:
       backend:
         condition: service_healthy

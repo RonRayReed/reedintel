@@ -9,5 +9,4 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-CMD ["/bin/sh", "-c", \
-  "printf '%s:%s\\n' \"${DASH_USER:-admin}\" \"$(openssl passwd -apr1 \"${DASH_PASSWORD:-changeme}\")\" > /etc/nginx/.htpasswd && nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]

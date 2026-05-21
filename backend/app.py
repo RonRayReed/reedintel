@@ -9,9 +9,10 @@ load_dotenv()  # loads .env if present (local dev only — no-op in production)
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager, contextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from apscheduler.schedulers.background import BackgroundScheduler
 import psycopg2
 import psycopg2.extras
@@ -178,6 +179,17 @@ def run_prozorro():
 
 
 # ── API routes ────────────────────────────────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/auth")
+async def auth(req: LoginRequest):
+    if req.username == os.getenv("DASH_USER", "admin") and \
+       req.password == os.getenv("DASH_PASSWORD", "changeme"):
+        return {"ok": True}
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @app.get("/health")
 async def health():

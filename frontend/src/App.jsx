@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Login from './components/Login'
 import Navbar from './components/Navbar'
 import StatCards from './components/StatCards'
 import TabBar from './components/TabBar'
@@ -15,10 +16,13 @@ const TABS = [
 ]
 
 export default function App() {
+  const [authed, setAuthed]       = useState(!!sessionStorage.getItem('reed_auth'))
   const [data, setData]           = useState(null)
   const [loading, setLoading]     = useState(true)
   const [fetchError, setFetchError] = useState(null)
   const [activeTab, setActiveTab] = useState('signals')
+
+  if (!authed) return <Login onSuccess={() => setAuthed(true)} />
 
   const load = async () => {
     try {
