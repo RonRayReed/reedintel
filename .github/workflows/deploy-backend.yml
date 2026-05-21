@@ -1,11 +1,11 @@
-name: Build and Deploy Dashboard
+name: Build and Deploy Backend
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - "frontend/**"
+      - "backend/**"
 
 jobs:
   build-and-deploy:
@@ -24,68 +24,66 @@ jobs:
         run: |
           az acr build \
             --registry reedintelacr \
-            --image reedintel-dashboard:${{ github.sha }} \
-            --image reedintel-dashboard:latest \
-            ./frontend
+            --image reedintel-backend:${{ github.sha }} \
+            --image reedintel-backend:latest \
+            ./backend
 
-      - name: Deploy Container App (create or update)
+      - name: Deploy Backend Container App (create or update)
         run: |
           ACR_PASS=$(az acr credential show \
             --name reedintelacr \
             --resource-group reedintel-prod-rg \
             --query "passwords[0].value" -o tsv)
 
-          ENV_DOMAIN=$(az containerapp env show \
-            --name reedintel-prod-cae \
+          PG_FQDN=$(az postgres flexible-server show \
+            --name reedintel-pg-prod \
             --resource-group reedintel-prod-rg \
-            --query "properties.defaultDomain" -o tsv)
-
-          BACKEND_URL="http://reedintel-backend.internal.$ENV_DOMAIN"
+            --query fullyQualifiedDomainName -o tsv)
 
           APP_EXISTS=$(az containerapp show \
-            --name reedintel-dashboard \
+            --name reedintel-backend \
             --resource-group reedintel-prod-rg \
             --query name -o tsv 2>/dev/null || echo "")
 
           if [ -z "$APP_EXISTS" ]; then
-            echo "Creating Container App for the first time..."
+            echo "Creating backend Container App for the first time..."
 
             az containerapp create \
-              --name reedintel-dashboard \
+              --name reedintel-backend \
               --resource-group reedintel-prod-rg \
               --environment reedintel-prod-cae \
-              --image "reedintelacr.azurecr.io/reedintel-dashboard:${{ github.sha }}" \
+              --image "reedintelacr.azurecr.io/reedintel-backend:${{ github.sha }}" \
               --registry-server reedintelacr.azurecr.io \
               --registry-username reedintelacr \
               --registry-password "$ACR_PASS" \
               --cpu 0.5 --memory 1.0Gi \
-              --min-replicas 1 --max-replicas 1 \
-              --ingress external --target-port 80 \
+              --min-replicas 1 --max-replicas 2 \
+              --ingress internal --target-port 8000 \
               --env-vars \
-                "BACKEND_URL=$BACKEND_URL"
+                "DATABASE_HOST=$PG_FQDN" \
+                DATABASE_NAME=reedintel \
+                DATABASE_USER=reedadmin \
+                DATABASE_SSLMODE=require \
+                "DATABASE_PASSWORD=${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
           else
-            echo "Updating existing Container App..."
+            echo "Updating existing backend Container App..."
             az containerapp registry set \
-              --name reedintel-dashboard \
+              --name reedintel-backend \
               --resource-group reedintel-prod-rg \
               --server reedintelacr.azurecr.io \
               --username reedintelacr \
               --password "$ACR_PASS"
 
             az containerapp update \
-              --name reedintel-dashboard \
+              --name reedintel-backend \
               --resource-group reedintel-prod-rg \
-              --image "reedintelacr.azurecr.io/reedintel-dashboard:${{ github.sha }}" \
-              --set-env-vars "BACKEND_URL=$BACKEND_URL"
+              --image "reedintelacr.azurecr.io/reedintel-backend:${{ github.sha }}"
           fi
 
-      - name: Print dashboard URL
+      - name: Print backend internal URL
         run: |
-          URL=$(az containerapp show \
-            --name reedintel-dashboard \
+          ENV_DOMAIN=$(az containerapp env show \
+            --name reedintel-prod-cae \
             --resource-group reedintel-prod-rg \
-            --query "properties.configuration.ingress.fqdn" -o tsv)
-          echo "=================================="
-          echo "  Dashboard live at:"
-          echo "  https://$URL"
-          echo "=================================="
+            --query "properties.defaultDomain" -o tsv)
+          echo "Backend internal URL: http://reedintel-backend.internal.$ENV_DOMAIN"
