@@ -31,6 +31,9 @@ services:
     build: ./frontend
     ports:
       - "80:80"
+    environment:
+      DASH_USER: ${DASH_USER:-admin}
+      DASH_PASSWORD: ${DASH_PASSWORD:-changeme}
     depends_on:
       backend:
         condition: service_healthy
