@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Login from './components/Login'
 import Navbar from './components/Navbar'
 import StatCards from './components/StatCards'
@@ -16,15 +16,13 @@ const TABS = [
 ]
 
 export default function App() {
-  const [authed, setAuthed]       = useState(!!sessionStorage.getItem('reed_auth'))
-  const [data, setData]           = useState(null)
-  const [loading, setLoading]     = useState(true)
+  const [authed, setAuthed]         = useState(!!sessionStorage.getItem('reed_auth'))
+  const [data, setData]             = useState(null)
+  const [loading, setLoading]       = useState(true)
   const [fetchError, setFetchError] = useState(null)
-  const [activeTab, setActiveTab] = useState('signals')
+  const [activeTab, setActiveTab]   = useState('signals')
 
-  if (!authed) return <Login onSuccess={() => setAuthed(true)} />
-
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch('/api/dashboard')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -35,13 +33,17 @@ export default function App() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
+  // Runs whenever authed flips to true — fires immediately after login
   useEffect(() => {
+    if (!authed) return
     load()
     const t = setInterval(load, 300_000)
     return () => clearInterval(t)
-  }, [])
+  }, [authed, load])
+
+  if (!authed) return <Login onSuccess={() => setAuthed(true)} />
 
   if (loading) {
     return (
