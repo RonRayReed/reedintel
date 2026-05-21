@@ -15,9 +15,17 @@ echo "Credentials fetched."
 echo "  PG host      : $PG_FQDN"
 echo "  Backend URL  : $BACKEND_URL"
 
-# --- [1/4] Worker: background ingestion job (no ingress needed) ---
+# --- [1/4] Build all images in ACR first ---
 echo ""
-echo "[1/4] Updating worker..."
+echo "[1/4] Building images in ACR..."
+az acr build --registry reedintelacr --image reedintel-backend:latest  ./backend
+az acr build --registry reedintelacr --image reedintel-worker:latest   ./worker
+az acr build --registry reedintelacr --image reedintel-dashboard:latest ./frontend
+echo "  Images built."
+
+# --- [2/4] Worker: background ingestion job (no ingress needed) ---
+echo ""
+echo "[2/4] Updating worker..."
 az containerapp registry set \
   --name reedintel-worker \
   --resource-group reedintel-prod-rg \
@@ -33,9 +41,9 @@ az containerapp update \
 
 echo "  Worker updated."
 
-# --- [2/4] Backend: FastAPI API server (internal ingress, port 8000) ---
+# --- [3/4] Backend: FastAPI API server (internal ingress, port 8000) ---
 echo ""
-echo "[2/4] Deploying backend API..."
+echo "[3/4] Deploying backend API..."
 BACKEND_EXISTS=$(az containerapp show --name reedintel-backend --resource-group reedintel-prod-rg --query name -o tsv 2>/dev/null || echo "")
 
 if [ -z "$BACKEND_EXISTS" ]; then
@@ -49,7 +57,7 @@ if [ -z "$BACKEND_EXISTS" ]; then
     --registry-password "$ACR_PASS" \
     --cpu 0.5 --memory 1.0Gi \
     --min-replicas 1 --max-replicas 2 \
-    --ingress internal --target-port 8000 \
+    --ingress internal --target-port 8000 --allow-insecure \
     --env-vars \
       "DATABASE_HOST=$PG_FQDN" \
       DATABASE_NAME=reedintel \
@@ -71,14 +79,6 @@ else
     --set-env-vars "DATABASE_HOST=$PG_FQDN" DATABASE_NAME=reedintel DATABASE_USER=reedadmin "DATABASE_PASSWORD=$DB_PASS" DATABASE_SSLMODE=require
 fi
 echo "  Backend updated."
-
-# --- [3/4] Build images in ACR (if not already built via GitHub Actions) ---
-echo ""
-echo "[3/4] Building images in ACR..."
-az acr build --registry reedintelacr --image reedintel-backend:latest ./backend
-az acr build --registry reedintelacr --image reedintel-worker:latest  ./worker
-az acr build --registry reedintelacr --image reedintel-dashboard:latest ./frontend
-echo "  Images built."
 
 # --- [4/4] Dashboard: React frontend (external ingress, port 80) ---
 echo ""

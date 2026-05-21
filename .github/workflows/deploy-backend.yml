@@ -58,7 +58,7 @@ jobs:
               --registry-password "$ACR_PASS" \
               --cpu 0.5 --memory 1.0Gi \
               --min-replicas 1 --max-replicas 2 \
-              --ingress internal --target-port 8000 \
+              --ingress internal --target-port 8000 --allow-insecure \
               --env-vars \
                 "DATABASE_HOST=$PG_FQDN" \
                 DATABASE_NAME=reedintel \
