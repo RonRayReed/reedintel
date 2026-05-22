@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reed Intel — Translation Engine Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0f2044;
+      --blue:   #1d4ed8;
+      --slate:  #64748b;
+      --light:  #f1f5f9;
+      --border: #e2e8f0;
+      --green:  #059669;
+      --amber:  #d97706;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.2px;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: #3b82f6;
+      border-radius: 50%;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.75);
+    }
+
+    /* ── Main ── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .page-sub {
+      font-size: 13px;
+      color: var(--slate);
+      margin-bottom: 32px;
+    }
+
+    /* ── Language bar ── */
+    .lang-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .lang-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      color: #334155;
+      transition: all .15s;
+    }
+    .lang-pill.active {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: #eff6ff;
+    }
+    .lang-flag { font-size: 15px; }
+    .arrow-btn {
+      background: var(--light);
+      border: none;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+      color: var(--slate);
+    }
+    .arrow-btn:hover { background: var(--border); }
+
+    /* ── Translation panels ── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 640px) {
+      .panels { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .panel-lang {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--slate);
+    }
+    .char-count {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1e293b;
+      background: transparent;
+      min-height: 180px;
+      font-family: inherit;
+    }
+    textarea::placeholder { color: #94a3b8; }
+
+    .output-area {
+      padding: 16px;
+      min-height: 180px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1e293b;
+      position: relative;
+    }
+    .output-placeholder {
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    /* ── Translate button ── */
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .btn-translate {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .15s;
+    }
+    .btn-translate:hover { background: #1a305f; }
+    .btn-translate:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .btn-clear {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--slate);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .btn-clear:hover { border-color: #94a3b8; }
+
+    .copy-btn {
+      margin-left: auto;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--slate);
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+    }
+    .copy-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status strip ── */
+    .status-strip {
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      margin-bottom: 28px;
+      display: none;
+    }
+    .status-strip.ok    { background: #ecfdf5; color: var(--green); display: block; }
+    .status-strip.error { background: #fef2f2; color: #dc2626;      display: block; }
+    .status-strip.info  { background: #eff6ff; color: var(--blue);  display: block; }
+
+    /* ── Sample phrases ── */
+    .samples-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--slate);
+      margin-bottom: 10px;
+    }
+    .samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+    .sample-chip {
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      color: #475569;
+      transition: all .15s;
+      line-height: 1.4;
+    }
+    .sample-chip:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: #eff6ff;
+    }
+
+    /* ── Info cards ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 640px) {
+      .info-grid { grid-template-columns: 1fr; }
+    }
+    .info-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .info-card-icon { font-size: 20px; margin-bottom: 8px; }
+    .info-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+    .info-card-body {
+      font-size: 11px;
+      color: var(--slate);
+      line-height: 1.5;
+    }
+
+    /* ── How it works ── */
+    .how-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 14px;
+    }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+    .step-num {
+      width: 26px; height: 26px;
+      background: var(--navy);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-text {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.5;
+    }
+    .step-text strong { color: var(--navy); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 11px;
+      color: #94a3b8;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Reed Intel
+  </div>
+  <span class="badge">Translation Engine · Demo</span>
+</header>
+
+<main>
+  <p class="page-title">Procurement Intelligence Translation</p>
+  <p class="page-sub">Translate Ukrainian procurement data into English in real time — powered by open-source translation technology, no data stored externally.</p>
+
+  <!-- Language selector -->
+  <div class="lang-bar">
+    <button class="lang-pill active" id="btn-uk-en">
+      <span class="lang-flag">🇺🇦</span> Ukrainian
+    </button>
+    <button class="arrow-btn" id="swap-btn" title="Swap languages">⇄</button>
+    <button class="lang-pill active" id="btn-en">
+      <span class="lang-flag">🇬🇧</span> English
+    </button>
+  </div>
+
+  <!-- Panels -->
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-lang" id="src-label">Ukrainian</span>
+        <span class="char-count" id="char-count">0 / 500</span>
+      </div>
+      <textarea id="src-input" maxlength="500"
+        placeholder="Paste Ukrainian procurement text here…&#10;&#10;e.g. Реконструкція дороги в Харківській області..."></textarea>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-lang" id="tgt-label">English</span>
+        <span class="char-count" id="provider-tag" style="color:#3b82f6;font-weight:600;">MyMemory API</span>
+      </div>
+      <div class="output-area" id="output">
+        <span class="output-placeholder" id="output-placeholder">Translation will appear here…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-strip" id="status"></div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn-translate" id="translate-btn" onclick="doTranslate()">
+      <span id="btn-label">Translate</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+    <button class="btn-clear" onclick="clearAll()">Clear</button>
+    <button class="copy-btn" id="copy-btn" onclick="copyResult()" style="display:none">
+      ⧉ Copy
+    </button>
+  </div>
+
+  <!-- Sample phrases -->
+  <p class="samples-title">Sample Procurement Phrases</p>
+  <div class="samples">
+    <button class="sample-chip" onclick="loadSample(this)">Реконструкція дороги в Харківській області</button>
+    <button class="sample-chip" onclick="loadSample(this)">Постачання медичного обладнання для лікарні</button>
+    <button class="sample-chip" onclick="loadSample(this)">Будівництво мосту через річку Дніпро</button>
+    <button class="sample-chip" onclick="loadSample(this)">Закупівля електрогенераторів для критичної інфраструктури</button>
+    <button class="sample-chip" onclick="loadSample(this)">Ремонт портової інфраструктури в Одесі</button>
+    <button class="sample-chip" onclick="loadSample(this)">Відновлення енергетичних підстанцій у Київській області</button>
+  </div>
+
+  <!-- Info cards -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-icon">🔒</div>
+      <div class="info-card-title">Privacy First</div>
+      <div class="info-card-body">No text is stored, logged, or used for training. Each request is stateless and encrypted in transit.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">⚡</div>
+      <div class="info-card-title">Real-Time Pipeline</div>
+      <div class="info-card-body">In production, translation runs automatically on ingestion — analysts see English signals the moment they are collected.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">🌐</div>
+      <div class="info-card-title">Open Source Engine</div>
+      <div class="info-card-body">Powered by MyMemory (demo) and LibreTranslate (production). Self-hosted option available — no third-party dependency required.</div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <p class="how-title">How It Works in Production</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>Signal ingested</strong> — ProZorro or other source returns raw Ukrainian text (title, description, city).</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>Translation triggered</strong> — the worker calls the self-hosted LibreTranslate container (already on the same VM) with <code>uk → en</code>.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>Stored bilingually</strong> — both the original Ukrainian and the English translation are saved in the database, preserving fidelity.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text"><strong>Dashboard displays English</strong> — analysts read clean English signals; original text available on demand for verification.</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Reed Intel &copy; 2025 — Confidential. Not for redistribution.
+</footer>
+
+<script>
+  const srcInput   = document.getElementById('src-input')
+  const output     = document.getElementById('output')
+  const placeholder = document.getElementById('output-placeholder')
+  const charCount  = document.getElementById('char-count')
+  const status     = document.getElementById('status')
+  const spinner    = document.getElementById('spinner')
+  const btnLabel   = document.getElementById('btn-label')
+  const translateBtn = document.getElementById('translate-btn')
+  const copyBtn    = document.getElementById('copy-btn')
+
+  let srcLang = 'uk'
+  let tgtLang = 'en'
+  let lastTranslation = ''
+
+  srcInput.addEventListener('input', () => {
+    charCount.textContent = `${srcInput.value.length} / 500`
+  })
+
+  document.getElementById('swap-btn').addEventListener('click', () => {
+    const tmp = srcLang; srcLang = tgtLang; tgtLang = tmp
+    document.getElementById('src-label').textContent = langName(srcLang)
+    document.getElementById('tgt-label').textContent = langName(tgtLang)
+    if (lastTranslation) {
+      srcInput.value = lastTranslation
+      charCount.textContent = `${srcInput.value.length} / 500`
+      clearOutput()
+    }
+  })
+
+  function langName(code) {
+    return code === 'uk' ? 'Ukrainian' : 'English'
+  }
+
+  function loadSample(btn) {
+    srcInput.value = btn.textContent.trim()
+    charCount.textContent = `${srcInput.value.length} / 500`
+    clearOutput()
+    srcInput.focus()
+  }
+
+  function clearAll() {
+    srcInput.value = ''
+    charCount.textContent = '0 / 500'
+    clearOutput()
+    hideStatus()
+  }
+
+  function clearOutput() {
+    output.innerHTML = ''
+    placeholder.style.display = 'block'
+    output.appendChild(placeholder)
+    copyBtn.style.display = 'none'
+    lastTranslation = ''
+  }
+
+  function showStatus(msg, type) {
+    status.textContent = msg
+    status.className = `status-strip ${type}`
+  }
+
+  function hideStatus() {
+    status.className = 'status-strip'
+  }
+
+  async function doTranslate() {
+    const text = srcInput.value.trim()
+    if (!text) { showStatus('Please enter some text to translate.', 'info'); return }
+
+    translateBtn.disabled = true
+    btnLabel.textContent = 'Translating…'
+    spinner.style.display = 'block'
+    hideStatus()
+    clearOutput()
+
+    try {
+      const url = new URL('https://api.mymemory.translated.net/get')
+      url.searchParams.set('q', text)
+      url.searchParams.set('langpair', `${srcLang}|${tgtLang}`)
+
+      const res  = await fetch(url.toString())
+      const json = await res.json()
+
+      if (json.responseStatus !== 200) throw new Error(json.responseDetails || 'Translation failed')
+
+      const translated = json.responseData.translatedText
+      lastTranslation  = translated
+
+      placeholder.style.display = 'none'
+      output.textContent = translated
+      copyBtn.style.display = 'flex'
+      showStatus(`Translated successfully · ${text.length} characters · powered by MyMemory`, 'ok')
+    } catch (err) {
+      showStatus(`Error: ${err.message} — check your internet connection and try again.`, 'error')
+    } finally {
+      translateBtn.disabled = false
+      btnLabel.textContent  = 'Translate'
+      spinner.style.display = 'none'
+    }
+  }
+
+  function copyResult() {
+    if (!lastTranslation) return
+    navigator.clipboard.writeText(lastTranslation).then(() => {
+      copyBtn.textContent = '✓ Copied'
+      setTimeout(() => { copyBtn.innerHTML = '⧉ Copy' }, 1500)
+    })
+  }
+
+  // Translate on Ctrl+Enter
+  srcInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) doTranslate()
+  })
+</script>
+</body>
+</html>

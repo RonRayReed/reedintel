@@ -78,6 +78,7 @@ def run():
                 source_url=f"{BASE_URL}/{tender_id}",
                 why_it_matters=f"New public procurement event detected. Estimated value: {value}.",
                 confidence_score=0.75,
+                source_lang="UK",
             )
             created += 1
 

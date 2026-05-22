@@ -14,6 +14,8 @@ frontend/node_modules/
 *.pyo
 .env
 
+backend/.env
+
 # Secrets — never commit these
 *.pem
 *.key

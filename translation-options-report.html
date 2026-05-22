@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Translation API Options — Reed Intel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #fff;
+      color: #1e293b;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ── Page wrapper ── */
+    .page {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 56px 64px;
+    }
+
+    /* ── Header ── */
+    .doc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f2044;
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f2044;
+      letter-spacing: -0.3px;
+    }
+    .brand span {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: #3b82f6;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+    .doc-meta {
+      text-align: right;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.7;
+    }
+    .doc-meta strong { color: #1e293b; }
+
+    /* ── Title block ── */
+    .doc-title {
+      margin-bottom: 28px;
+    }
+    .doc-title h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f2044;
+      margin-bottom: 6px;
+    }
+    .doc-title p {
+      font-size: 13px;
+      color: #64748b;
+      max-width: 580px;
+    }
+
+    /* ── Section ── */
+    .section { margin-bottom: 36px; }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    p { margin-bottom: 10px; color: #334155; }
+
+    /* ── Comparison table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    thead tr {
+      background: #0f2044;
+      color: #fff;
+    }
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+    }
+    tbody tr { border-bottom: 1px solid #e2e8f0; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    tbody td {
+      padding: 10px 14px;
+      vertical-align: top;
+      color: #334155;
+    }
+    tbody td:first-child { font-weight: 600; color: #0f2044; }
+
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .tag-green  { background: #dcfce7; color: #15803d; }
+    .tag-blue   { background: #dbeafe; color: #1d4ed8; }
+    .tag-amber  { background: #fef3c7; color: #b45309; }
+    .tag-slate  { background: #f1f5f9; color: #475569; }
+
+    /* ── Option cards ── */
+    .cards { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .card-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #0f2044;
+    }
+    .card-body { padding: 14px 18px; }
+    .card-body p { margin-bottom: 8px; font-size: 12px; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .col-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .list { list-style: none; }
+    .list li {
+      font-size: 12px;
+      color: #334155;
+      padding: 2px 0;
+      padding-left: 14px;
+      position: relative;
+    }
+    .list.pros li::before { content: '✓'; position: absolute; left: 0; color: #16a34a; font-weight: 700; }
+    .list.cons li::before { content: '✗'; position: absolute; left: 0; color: #dc2626; font-weight: 700; }
+
+    /* ── Recommendation box ── */
+    .recommend-box {
+      background: #0f2044;
+      color: #fff;
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 36px;
+    }
+    .recommend-box h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #93c5fd;
+    }
+    .recommend-box p {
+      color: rgba(255,255,255,0.8);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .recommend-box p:last-child { margin-bottom: 0; }
+
+    /* ── Use-case table ── */
+    .use-table td:first-child { color: #334155; font-weight: 500; }
+
+    /* ── Footer ── */
+    .doc-footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    /* ── Print styles ── */
+    @media print {
+      body { font-size: 12px; }
+      .page { padding: 32px 40px; }
+      .card, .recommend-box { break-inside: avoid; }
+      .section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="brand"><span></span>Reed Intel</div>
+    <div class="doc-meta">
+      <strong>Translation API Options</strong><br>
+      Prepared: May 2025<br>
+      Classification: Client Briefing
+    </div>
+  </div>
+
+  <!-- Title -->
+  <div class="doc-title">
+    <h1>Translation API Options for Intelligence Pipeline</h1>
+    <p>An evaluation of free and open-source translation services suitable for integrating Ukrainian-to-English translation into the Reed Intel procurement intelligence platform.</p>
+  </div>
+
+  <!-- Overview -->
+  <div class="section">
+    <p class="section-title">Overview</p>
+    <p>The Reed Intel platform ingests procurement data primarily from Ukrainian sources (ProZorro). To make signals readable for English-speaking analysts, an automated translation layer is required. The following options have been evaluated based on cost, ease of integration, data privacy, and Ukrainian language support.</p>
+    <p>All options listed below have a <strong>free tier or are fully open source</strong> with no licensing cost. The choice depends primarily on privacy requirements and expected translation volume.</p>
+  </div>
+
+  <!-- Comparison table -->
+  <div class="section">
+    <p class="section-title">Quick Comparison</p>
+    <table>
+      <thead>
+        <tr>
+          <th>API / Service</th>
+          <th>Free Limit</th>
+          <th>Ukrainian Support</th>
+          <th>Setup Effort</th>
+          <th>Data Leaves Server</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>MyMemory</td>
+          <td>10,000 words/day</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-green">Minimal</span></td>
+          <td>Yes</td>
+          <td>Quick prototyping</td>
+        </tr>
+        <tr>
+          <td>LibreTranslate (self-hosted)</td>
+          <td>Unlimited</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-blue">Low</span></td>
+          <td>No</td>
+          <td>Production, privacy-first</td>
+        </tr>
+        <tr>
+          <td>DeepL Free</td>
+          <td>500,000 chars/month</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-blue">Low</span></td>
+          <td>Yes</td>
+          <td>High accuracy, low volume</td>
+        </tr>
+        <tr>
+          <td>Helsinki NLP (HuggingFace)</td>
+          <td>Unlimited (runs locally)</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-amber">Medium</span></td>
+          <td>No</td>
+          <td>Fully offline, air-gapped</td>
+        </tr>
+        <tr>
+          <td>Google Translate API</td>
+          <td>$300 credit (new accounts)</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-amber">Medium</span></td>
+          <td>Yes</td>
+          <td>High volume, pay-as-you-go</td>
+        </tr>
+        <tr>
+          <td>Microsoft Azure Translator</td>
+          <td>2M chars/month free</td>
+          <td><span class="tag tag-green">Yes</span></td>
+          <td><span class="tag tag-amber">Medium</span></td>
+          <td>Yes</td>
+          <td>Azure-native integrations</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Detailed cards -->
+  <div class="section">
+    <p class="section-title">Detailed Breakdown</p>
+    <div class="cards">
+
+      <!-- MyMemory -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">1. MyMemory</span>
+          <span class="tag tag-green">Free · No API Key Required</span>
+        </div>
+        <div class="card-body">
+          <p>A simple REST API for translation that requires no account or key for up to 1,000 words/day. Registering a free email account raises this to 10,000 words/day. Data is sent to external servers.</p>
+          <div class="two-col">
+            <div>
+              <p class="col-title">Advantages</p>
+              <ul class="list pros">
+                <li>Zero setup — single HTTP request</li>
+                <li>No billing account required</li>
+                <li>Good for demos and testing</li>
+                <li>Supports Ukrainian language</li>
+              </ul>
+            </div>
+            <div>
+              <p class="col-title">Limitations</p>
+              <ul class="list cons">
+                <li>10,000 word/day limit on free tier</li>
+                <li>Translation quality is inconsistent</li>
+                <li>Data sent to third-party servers</li>
+                <li>Not suitable for production volume</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LibreTranslate -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">2. LibreTranslate (Self-Hosted)</span>
+          <span class="tag tag-blue">Recommended · Open Source</span>
+        </div>
+        <div class="card-body">
+          <p>An open-source translation engine that can be deployed as a Docker container on the existing Reed Intel VM alongside the current backend. Once running, it provides unlimited translations with no external API calls — all data stays on the server.</p>
+          <div class="two-col">
+            <div>
+              <p class="col-title">Advantages</p>
+              <ul class="list pros">
+                <li>Completely free with no usage limits</li>
+                <li>Data never leaves the server</li>
+                <li>One Docker container — easy to deploy</li>
+                <li>Supports Ukrainian (uk → en)</li>
+                <li>No vendor dependency or lock-in</li>
+              </ul>
+            </div>
+            <div>
+              <p class="col-title">Limitations</p>
+              <ul class="list cons">
+                <li>Requires ~1–2 GB of RAM for language models</li>
+                <li>Translation quality below DeepL/Google</li>
+                <li>Needs initial model download (~300 MB)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DeepL -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">3. DeepL Free</span>
+          <span class="tag tag-green">Free Tier · Best Quality</span>
+        </div>
+        <div class="card-body">
+          <p>DeepL is widely regarded as the most accurate translation engine available. The free tier provides 500,000 characters per month — sufficient for moderate signal volumes. Requires a free account. Ukrainian support was added in 2023.</p>
+          <div class="two-col">
+            <div>
+              <p class="col-title">Advantages</p>
+              <ul class="list pros">
+                <li>Highest translation quality available</li>
+                <li>500,000 chars/month free</li>
+                <li>Simple REST API with official SDKs</li>
+                <li>Strong Ukrainian language support</li>
+              </ul>
+            </div>
+            <div>
+              <p class="col-title">Limitations</p>
+              <ul class="list cons">
+                <li>Data sent to DeepL servers (Germany)</li>
+                <li>Free tier has monthly character cap</li>
+                <li>Requires account registration</li>
+                <li>Paid plan needed above 500k chars</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Helsinki NLP -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">4. Helsinki NLP (HuggingFace — Offline)</span>
+          <span class="tag tag-slate">Fully Offline · Technical Setup</span>
+        </div>
+        <div class="card-body">
+          <p>Helsinki NLP provides pre-trained machine translation models (opus-mt-uk-en) available on HuggingFace. These run entirely on the server with no internet connection required after the initial model download, making them suitable for high-security or air-gapped environments.</p>
+          <div class="two-col">
+            <div>
+              <p class="col-title">Advantages</p>
+              <ul class="list pros">
+                <li>Completely offline after setup</li>
+                <li>No data ever sent externally</li>
+                <li>Unlimited usage, no rate limits</li>
+                <li>Free and open source (MIT licence)</li>
+              </ul>
+            </div>
+            <div>
+              <p class="col-title">Limitations</p>
+              <ul class="list cons">
+                <li>Requires Python/ML environment setup</li>
+                <li>Slower than API-based solutions</li>
+                <li>Higher server resource usage</li>
+                <li>More complex to maintain</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Translate -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">5. Google Translate API</span>
+          <span class="tag tag-amber">Free Credit · Billing Required</span>
+        </div>
+        <div class="card-body">
+          <p>Google Cloud Translation offers $300 of free credit for new accounts and $0.50 per million characters thereafter. While highly accurate and scalable, it requires setting up a Google Cloud billing account even to access the free tier, and data is processed by Google.</p>
+          <div class="two-col">
+            <div>
+              <p class="col-title">Advantages</p>
+              <ul class="list pros">
+                <li>Excellent translation quality</li>
+                <li>Highly scalable for large volumes</li>
+                <li>$300 free credit for new accounts</li>
+                <li>Broad language support</li>
+              </ul>
+            </div>
+            <div>
+              <p class="col-title">Limitations</p>
+              <ul class="list cons">
+                <li>Billing account required from day one</li>
+                <li>Data processed by Google</li>
+                <li>Cost grows with volume after credit</li>
+                <li>Vendor dependency on Google Cloud</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Microsoft Azure -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">6. Microsoft Azure Translator</span>
+          <span class="tag tag-amber">2M Chars/Month Free</span>
+        </div>
+        <div class="card-body">
+          <p>Azure Cognitive Services Translator offers 2 million free characters per month under the F0 (free) tier — the most generous free allowance among the managed cloud providers. Since the Reed Intel infrastructure already runs on Azure, this would integrate naturally with existing Azure credentials and billing.</p>
+          <div class="two-col">
+            <div>
+              <p class="col-title">Advantages</p>
+              <ul class="list pros">
+                <li>2M characters/month free — most generous</li>
+                <li>Already on Azure — no new vendor</li>
+                <li>Strong accuracy and Ukrainian support</li>
+                <li>Scales to paid tier seamlessly</li>
+              </ul>
+            </div>
+            <div>
+              <p class="col-title">Limitations</p>
+              <ul class="list cons">
+                <li>Requires Azure subscription setup</li>
+                <li>Data sent to Microsoft servers</li>
+                <li>Azure configuration adds complexity</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Recommendation -->
+  <div class="recommend-box">
+    <h3>Our Recommendation</h3>
+    <p>For the Reed Intel production pipeline, we recommend a <strong>two-stage approach</strong>:</p>
+    <p><strong>Phase 1 (Immediate):</strong> Deploy <strong>LibreTranslate</strong> as a self-hosted Docker container on the existing VM. This is the fastest path to unlimited, private, cost-free translation with no external API dependency. It can be live within a day and handles the current ProZorro signal volume comfortably.</p>
+    <p><strong>Phase 2 (If higher accuracy is required):</strong> Switch to <strong>DeepL Free</strong> or <strong>Azure Translator</strong> once signal volume and quality expectations are confirmed. DeepL offers the best translation quality; Azure Translator integrates naturally with the existing Azure infrastructure and offers the most generous free tier among managed cloud services.</p>
+  </div>
+
+  <!-- Use case mapping -->
+  <div class="section">
+    <p class="section-title">Use Case Mapping</p>
+    <table class="use-table">
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Recommended Option</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Demo / proof of concept</td>
+          <td><span class="tag tag-green">MyMemory</span></td>
+          <td>Zero setup, no accounts needed</td>
+        </tr>
+        <tr>
+          <td>Production (privacy-first, unlimited)</td>
+          <td><span class="tag tag-blue">LibreTranslate (self-hosted)</span></td>
+          <td>No data leaves the server, no cost</td>
+        </tr>
+        <tr>
+          <td>Production (highest accuracy)</td>
+          <td><span class="tag tag-green">DeepL Free</span></td>
+          <td>Best quality, 500k chars/month free</td>
+        </tr>
+        <tr>
+          <td>Production (Azure-native, scalable)</td>
+          <td><span class="tag tag-amber">Azure Translator</span></td>
+          <td>2M chars/month free, same vendor as infra</td>
+        </tr>
+        <tr>
+          <td>Air-gapped / high-security environment</td>
+          <td><span class="tag tag-slate">Helsinki NLP (offline)</span></td>
+          <td>Fully offline, no internet required</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="doc-footer">
+    <span>Reed Intel &copy; 2025 — Confidential. Not for redistribution.</span>
+    <span>Translation API Evaluation · May 2025</span>
+  </div>
+
+</div>
+</body>
+</html>

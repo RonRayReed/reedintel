@@ -32,4 +32,19 @@ def enrich_company(edrpou: str):
 
 
 def run():
-    return {"source": "OpenDataBot", "status": "ready — call enrich_company(edrpou) to enrich a company"}
+    """Enrich Ukrainian companies extracted from recent ProZorro tenders."""
+    if not settings.opendatabot_api_key:
+        return {"source": "OpenDataBot", "status": "skipped", "reason": "OPENDATABOT_API_KEY not set"}
+
+    from db import get_unenriched_edrpou_codes
+    codes = get_unenriched_edrpou_codes(limit=20)
+    enriched = 0
+    errors = 0
+    for edrpou in codes:
+        try:
+            enrich_company(edrpou)
+            enriched += 1
+        except Exception:
+            errors += 1
+
+    return {"source": "OpenDataBot", "enriched_companies": enriched, "errors": errors}

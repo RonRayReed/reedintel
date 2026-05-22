@@ -80,6 +80,24 @@ def upsert_company(
         return str(result.scalar())
 
 
+def get_unenriched_edrpou_codes(limit: int = 20) -> list[str]:
+    """Return EDRPOU codes from ProZorro tenders not yet enriched by OpenDataBot."""
+    with engine.connect() as conn:
+        rows = conn.execute(text("""
+            SELECT DISTINCT raw_json->'procuringEntity'->'identifier'->>'id' AS edrpou
+            FROM source_records
+            WHERE source_name = 'ProZorro'
+              AND raw_json->'procuringEntity'->'identifier'->>'scheme' = 'UA-EDR'
+              AND raw_json->'procuringEntity'->'identifier'->>'id' IS NOT NULL
+              AND raw_json->'procuringEntity'->'identifier'->>'id' NOT IN (
+                  SELECT registration_number FROM companies
+                  WHERE source_system = 'OpenDataBot' AND registration_number IS NOT NULL
+              )
+            LIMIT :limit
+        """), {"limit": limit}).fetchall()
+        return [row[0] for row in rows if row[0]]
+
+
 def insert_editorial_item(
     event_type,
     title,
@@ -91,7 +109,11 @@ def insert_editorial_item(
     confidence_score,
     company_id=None,
     procurement_event_id=None,
+    source_lang: str = None,
 ):
+    from translation import translate_pair
+    title, why_it_matters = translate_pair(title, why_it_matters, source_lang=source_lang)
+
     with engine.begin() as conn:
         result = conn.execute(text("""
             INSERT INTO editorial_queue

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Resources/deployments/Microsoft.Network-20260522005439/operations/9F2CDD15DCE29B89",
+    "operationId": "9F2CDD15DCE29B89",
+    "properties": {
+      "provisioningOperation": "Create",
+      "provisioningState": "Succeeded",
+      "timestamp": "2026-05-21T19:54:44.6026751Z",
+      "duration": "PT33M34.4885035S",
+      "trackingId": "b2737c1c-57af-436c-b2cb-50f5b7009fc2",
+      "statusCode": "OK",
+      "targetResource": {
+        "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Network/virtualNetworkGateways/reedintel",
+        "resourceType": "Microsoft.Network/virtualNetworkGateways",
+        "resourceName": "reedintel"
+      }
+    }
+  },
+  {
+    "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Resources/deployments/Microsoft.Network-20260522005439/operations/BB4008B65F166B0E",
+    "operationId": "BB4008B65F166B0E",
+    "properties": {
+      "provisioningOperation": "Create",
+      "provisioningState": "Succeeded",
+      "timestamp": "2026-05-21T19:54:44.6026751Z",
+      "duration": "PT3.9944974S",
+      "trackingId": "3d9180ef-3b6e-42d2-a6e4-c6c32552a9b7",
+      "statusCode": "OK",
+      "targetResource": {
+        "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Network/publicIPAddresses/reedintel-uservpn-ip",
+        "resourceType": "Microsoft.Network/publicIPAddresses",
+        "resourceName": "reedintel-uservpn-ip"
+      }
+    }
+  },
+  {
+    "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Resources/deployments/Microsoft.Network-20260522005439/operations/08584222136013812720",
+    "operationId": "08584222136013812720",
+    "properties": {
+      "provisioningOperation": "EvaluateDeploymentOutput",
+      "provisioningState": "Succeeded",
+      "timestamp": "2026-05-21T19:54:44.6026751Z",
+      "duration": "PT33M34.6134561S",
+      "trackingId": "78584604-e277-4cf1-8315-bd764a8eecb2",
+      "statusCode": "OK"
+    }
+  }
+]

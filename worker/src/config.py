@@ -11,6 +11,7 @@ class Settings:
     database_password: str = os.getenv("DATABASE_PASSWORD", "")
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     opendatabot_api_key: str = os.getenv("OPENDATABOT_API_KEY", "")
+    deepl_api_key: str = os.getenv("DEEPL_API_KEY", "")
     run_mode: str = os.getenv("RUN_MODE", "once")
 
     @property

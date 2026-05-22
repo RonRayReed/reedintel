@@ -1,0 +1,60 @@
+{
+  "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Resources/deployments/Microsoft.Network-20260522005439",
+  "name": "Microsoft.Network-20260522005439",
+  "type": "Microsoft.Resources/deployments",
+  "properties": {
+    "templateHash": "15215344470893031783",
+    "parameters": {},
+    "mode": "Incremental",
+    "debugSetting": {
+      "detailLevel": "None"
+    },
+    "provisioningState": "Succeeded",
+    "timestamp": "2026-05-21T20:28:19.2630101Z",
+    "duration": "PT33M35.1692412S",
+    "correlationId": "59433e79-571b-447a-a60f-f8e8fd4aa1f5",
+    "providers": [
+      {
+        "namespace": "Microsoft.Network",
+        "resourceTypes": [
+          {
+            "resourceType": "publicIPAddresses",
+            "locations": [
+              "canadacentral"
+            ]
+          },
+          {
+            "resourceType": "virtualNetworkGateways",
+            "locations": [
+              "canadacentral"
+            ]
+          }
+        ]
+      }
+    ],
+    "dependencies": [
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Network/publicIPAddresses/reedintel-uservpn-ip",
+            "resourceType": "Microsoft.Network/publicIPAddresses",
+            "resourceName": "reedintel-uservpn-ip"
+          }
+        ],
+        "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Network/virtualNetworkGateways/reedintel",
+        "resourceType": "Microsoft.Network/virtualNetworkGateways",
+        "resourceName": "reedintel"
+      }
+    ],
+    "outputResources": [
+      {
+        "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Network/publicIPAddresses/reedintel-uservpn-ip"
+      },
+      {
+        "id": "/subscriptions/bc3d1c74-c6f6-4da8-b13c-9053542cf150/resourceGroups/reedintel-prod-rg/providers/Microsoft.Network/virtualNetworkGateways/reedintel"
+      }
+    ],
+    "validationLevel": "Template"
+  },
+  "tags": {}
+}

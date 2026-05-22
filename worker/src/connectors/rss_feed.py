@@ -4,12 +4,12 @@ from db import insert_source_record, insert_editorial_item
 from tagging import infer_city, infer_sector
 
 FEED_SOURCES = [
-    {
-        "source_name": "Lviv IT Cluster RSS",
-        "url": "https://itcluster.lviv.ua/en/feed/",
-        "city": "Lviv",
-        "country": "Ukraine",
-    },
+    {"source_name": "Lviv IT Cluster",      "url": "https://itcluster.lviv.ua/en/feed/",           "city": "Lviv",      "country": "Ukraine"},
+    {"source_name": "Ekonomichna Pravda",    "url": "https://www.epravda.com.ua/rss/economics/",    "city": "Kyiv",      "country": "Ukraine"},
+    {"source_name": "Ukrinform Economy",     "url": "https://www.ukrinform.net/rss/block-economy",  "city": "Kyiv",      "country": "Ukraine"},
+    {"source_name": "Interfax Ukraine",      "url": "https://en.interfax.com.ua/news/economic.rss", "city": "Kyiv",      "country": "Ukraine"},
+    {"source_name": "Moldova Business News", "url": "https://www.mold-street.com/?rss=1",            "city": "Chisinau",  "country": "Moldova"},
+    {"source_name": "Romania Economica",     "url": "https://www.economica.net/rss",                 "city": "Bucharest", "country": "Romania"},
 ]
 
 
